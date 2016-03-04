@@ -18,12 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
 package org.sonar.plugins.php;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sonar.sslr.api.RecognitionException;
+import java.io.File;
+import java.io.InterruptedIOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +48,13 @@ import org.sonar.api.issue.NoSonarFilter;
 import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.FileLinesContextFactory;
 import org.sonar.api.measures.PersistenceMode;
+import org.sonar.api.profiles.RulesProfile;
 import org.sonar.api.resources.Project;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.rules.Rule;
+import org.sonar.api.rules.RuleFinder;
+import org.sonar.api.rules.RuleQuery;
+import org.sonar.api.rules.Violation;
 import org.sonar.api.source.Highlightable;
 import org.sonar.api.source.Highlightable.HighlightingBuilder;
 import org.sonar.api.source.Symbolizable;
@@ -52,19 +65,20 @@ import org.sonar.php.highlighter.SymbolHighlightingData;
 import org.sonar.php.highlighter.SyntaxHighlightingData;
 import org.sonar.php.metrics.FileMeasures;
 import org.sonar.plugins.php.api.Php;
+import org.sonar.plugins.php.api.symbols.Symbol;
+import org.sonar.plugins.php.api.visitors.Issue;
 import org.sonar.plugins.php.api.visitors.PHPCheck;
 import org.sonar.plugins.php.api.visitors.PHPCustomRulesDefinition;
+import org.sonar.plugins.php.codesniffer.PhpCodeSnifferViolation;
+import org.sonar.plugins.php.codesniffer.PhpCodeSnifferViolationsXmlParser;
 import org.sonar.squidbridge.ProgressReport;
 import org.sonar.squidbridge.api.AnalysisException;
-
-import java.io.InterruptedIOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class PHPSensor implements Sensor {
 
   private static final Logger LOG = LoggerFactory.getLogger(PHPSensor.class);
+
+  private static final String PHPCS_REPOSITORY_KEY = "php_codesniffer_rules";
 
   private final ResourcePerspectives resourcePerspectives;
   private final FileSystem fileSystem;
@@ -73,15 +87,35 @@ public class PHPSensor implements Sensor {
   private final PHPChecks checks;
   private final NoSonarFilter noSonarFilter;
   private SensorContext context;
+  private Php php;
+  private RuleFinder ruleFinder;
+  private PhpCodeSnifferViolationsXmlParser parser;
+  private RulesProfile rulesProfile;
 
+  private Collection<Rule> rulesFromRepository;
 
-  public PHPSensor(ResourcePerspectives resourcePerspectives, FileSystem fileSystem, FileLinesContextFactory fileLinesContextFactory,
-                   CheckFactory checkFactory, NoSonarFilter noSonarFilter) {
-    this(resourcePerspectives, fileSystem, fileLinesContextFactory, checkFactory, noSonarFilter, null);
+  public PHPSensor(ResourcePerspectives resourcePerspectives,
+          FileSystem fileSystem,
+          FileLinesContextFactory fileLinesContextFactory,
+          CheckFactory checkFactory,
+          NoSonarFilter noSonarFilter,
+          Php php,
+          RuleFinder ruleFinder,
+          PhpCodeSnifferViolationsXmlParser parser,
+          RulesProfile rulesProfile) {
+    this(resourcePerspectives, fileSystem, fileLinesContextFactory, checkFactory, noSonarFilter, null, php, ruleFinder, parser, rulesProfile);
   }
 
-  public PHPSensor(ResourcePerspectives resourcePerspectives, FileSystem fileSystem, FileLinesContextFactory fileLinesContextFactory,
-                   CheckFactory checkFactory, NoSonarFilter noSonarFilter, @Nullable PHPCustomRulesDefinition[] customRulesDefinitions) {
+  public PHPSensor(ResourcePerspectives resourcePerspectives,
+          FileSystem fileSystem,
+          FileLinesContextFactory fileLinesContextFactory,
+          CheckFactory checkFactory,
+          NoSonarFilter noSonarFilter,
+          @Nullable PHPCustomRulesDefinition[] customRulesDefinitions,
+          Php php,
+          RuleFinder ruleFinder,
+          PhpCodeSnifferViolationsXmlParser parser,
+          RulesProfile rulesProfile) {
 
     this.checks = PHPChecks.createPHPCheck(checkFactory)
       .addChecks(CheckList.REPOSITORY_KEY, CheckList.getChecks())
@@ -93,6 +127,10 @@ public class PHPSensor implements Sensor {
     this.mainFilePredicate = this.fileSystem.predicates().and(
       this.fileSystem.predicates().hasType(InputFile.Type.MAIN),
       this.fileSystem.predicates().hasLanguage(Php.KEY));
+    this.php = php;
+    this.ruleFinder = ruleFinder;
+    this.parser = parser;
+    this.rulesProfile = rulesProfile;
   }
 
   @Override
@@ -112,16 +150,27 @@ public class PHPSensor implements Sensor {
     ProgressReport progressReport = new ProgressReport("Report about progress of PHP analyzer", TimeUnit.SECONDS.toMillis(10));
     progressReport.start(Lists.newArrayList(fileSystem.files(mainFilePredicate)));
 
-    analyseFiles(phpAnalyzer, inputFiles, progressReport);
+    rulesFromRepository = ruleFinder.findAll(RuleQuery.create().withRepositoryKey(PHPCS_REPOSITORY_KEY));
+
+	// ------------------------------------------------------------
+    // PHPCSを実行する
+	// ------------------------------------------------------------
+    File report = new File("phpcs.xml"); // TODO 本来ここはconfigureation.getReportPath()だった
+    List<PhpCodeSnifferViolation> violations = parser.getViolations(report);
+
+    LOG.info("Number of phpcs violations : " + violations.size());
+
+    analyseFiles(phpAnalyzer, inputFiles, progressReport, violations);
+
   }
 
   @VisibleForTesting
-  void analyseFiles(PHPAnalyzer phpAnalyzer, List<InputFile> inputFiles, ProgressReport progressReport) {
+  void analyseFiles(PHPAnalyzer phpAnalyzer, List<InputFile> inputFiles, ProgressReport progressReport, List<PhpCodeSnifferViolation> violations) {
     boolean success = false;
     try {
       for (InputFile inputFile : inputFiles) {
         progressReport.nextFile();
-        analyseFile(phpAnalyzer, inputFile);
+        analyseFile(phpAnalyzer, inputFile, violations);
       }
       success = true;
     } finally {
@@ -137,10 +186,11 @@ public class PHPSensor implements Sensor {
     }
   }
 
-  private void analyseFile(PHPAnalyzer phpAnalyzer, InputFile inputFile) {
+  private void analyseFile(PHPAnalyzer phpAnalyzer, InputFile inputFile, List<PhpCodeSnifferViolation> violations) {
     try {
       phpAnalyzer.nextFile(inputFile.file());
-      saveIssues(phpAnalyzer.analyze(), inputFile);
+      phpAnalyzer.analyze();
+      saveIssues(violations, inputFile);
       saveSyntaxHighlighting(phpAnalyzer.getSyntaxHighlighting(), inputFile);
       saveSymbolHighlighting(phpAnalyzer.getSymbolHighlighting(), inputFile);
       saveNewFileMeasures(phpAnalyzer.computeMeasures(fileLinesContextFactory.createFor(inputFile)), inputFile);
@@ -220,19 +270,34 @@ public class PHPSensor implements Sensor {
     noSonarFilter.addComponent(context.getResource(inputFile).getEffectiveKey(), fileMeasures.getNoSonarLines());
   }
 
-  private void saveIssues(List<org.sonar.plugins.php.api.visitors.Issue> issues, InputFile inputFile) {
-    for (org.sonar.plugins.php.api.visitors.Issue phpIssue : issues) {
-      RuleKey ruleKey = checks.ruleKeyFor(phpIssue.check());
+  private void saveIssues(List<PhpCodeSnifferViolation> violations, InputFile inputFile) {
+    for (PhpCodeSnifferViolation v : violations) {
       Issuable issuable = resourcePerspectives.as(Issuable.class, inputFile);
 
-      if (issuable != null) {
-        Issuable.IssueBuilder issueBuilder = issuable.newIssueBuilder()
-          .ruleKey(ruleKey)
-          .message(phpIssue.message())
-          .effortToFix(phpIssue.cost());
+      if (!inputFile.absolutePath().equals(v.getSourcePath())) {
+        continue;
+      }
 
-        if (phpIssue.line() > 0) {
-          issueBuilder.line(phpIssue.line());
+      LOG.info("inputFile.absolutePath() : " + inputFile.absolutePath());
+      LOG.info("v.getSourcePath() : " + v.getSourcePath());
+      LOG.info("v.getRuleKey() : " + v.getRuleKey());
+      LOG.info("v.getRuleName() : " + v.getRuleName());
+      LOG.info("v.getLongMessage() : " + v.getLongMessage());
+      LOG.info("v.getType() : " + v.getType());
+      LOG.info("v.getFileName() : " + v.getFileName());
+      
+      if (issuable != null) {
+        Rule matchedRule = getRuleFromRepository(rulesFromRepository, v.getRuleKey());
+        if (matchedRule == null) {
+            LOG.info("skip rule : " + v.getRuleKey());
+        }
+        Issuable.IssueBuilder issueBuilder = issuable.newIssueBuilder()
+          .ruleKey(RuleKey.of(PHPCS_REPOSITORY_KEY, matchedRule.getKey()))
+          .message(v.getLongMessage())
+          .effortToFix(1.0);
+
+        if (v.getLine() > 0) {
+          issueBuilder.line(v.getLine());
         }
 
         issuable.addIssue(issueBuilder.build());
@@ -247,5 +312,27 @@ public class PHPSensor implements Sensor {
   @Override
   public String toString() {
     return getClass().getSimpleName();
+  }
+
+  /**
+   * phpcsレポートの指摘に対応するSonarQubeルールを取得する
+   *
+   * 事情（※）によりphpcsレポートの指摘ルールのキー名と、SonarQubeに登録されているキー名は一致しない。
+   * phpcs側のキー名に前方一致するSonarQube側キーが存在する場合、そのキーに対応するRuleオブジェクトを返す。
+   *
+   * ※ 詳しくはREADME.mdを参照のこと。
+   *
+   * @param Collection<Rule> rulesFromRepository SonarQubeに登録されているphpcsルールのコレクション
+   * @param String           ruleKeyFromReport   指摘ルールのキー名
+   *
+   * @return Rule 対応するルール。存在しない場合は <code>null</code> を返す。
+   */
+  private Rule getRuleFromRepository(Collection<Rule> rulesFromRepository, String ruleKeyFromReport) {
+    for (Rule rule : rulesFromRepository) {
+      if (ruleKeyFromReport.startsWith(rule.getKey())) {
+        return rule;
+      }
+    }
+   return null;
   }
 }

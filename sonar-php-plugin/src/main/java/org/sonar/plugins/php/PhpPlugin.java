@@ -20,10 +20,14 @@
 package org.sonar.plugins.php;
 
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.sonar.api.SonarPlugin;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.resources.Qualifiers;
+import org.sonar.plugins.php.PhpCsRulesDefinition;
 import org.sonar.plugins.php.api.Php;
+import org.sonar.plugins.php.codesniffer.PhpCodeSnifferViolationsXmlParser;
+import org.sonar.plugins.php.codesniffer.PhpCodeSnifferRuleRepository;
 import org.sonar.plugins.php.core.NoSonarAndCommentedOutLocSensor;
 import org.sonar.plugins.php.core.PhpCommonRulesDecorator;
 import org.sonar.plugins.php.core.PhpCommonRulesEngine;
@@ -33,8 +37,6 @@ import org.sonar.plugins.php.phpunit.PhpUnitItCoverageResultParser;
 import org.sonar.plugins.php.phpunit.PhpUnitOverallCoverageResultParser;
 import org.sonar.plugins.php.phpunit.PhpUnitResultParser;
 import org.sonar.plugins.php.phpunit.PhpUnitSensor;
-
-import java.util.List;
 
 public class PhpPlugin extends SonarPlugin {
 
@@ -73,9 +75,15 @@ public class PhpPlugin extends SonarPlugin {
       PHPSensor.class,
 
       PHPRulesDefinition.class,
+      PhpCsRulesDefinition.class,
       PHPProfile.class,
       PSR2Profile.class,
       DrupalProfile.class,
+
+      // PHPCS
+      PhpCodeSnifferViolationsXmlParser.class,
+      PhpCodeSnifferRuleRepository.class,
+      PhpCsProfile.class,
 
       // PhpUnit
       PhpUnitSensor.class,

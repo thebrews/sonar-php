@@ -19,25 +19,21 @@
  */
 package org.sonar.plugins.php;
 
-import org.sonar.api.server.rule.RulesDefinition;
-import org.sonar.php.checks.CheckList;
-import org.sonar.plugins.php.api.Php;
-import org.sonar.squidbridge.annotations.AnnotationBasedRulesDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.sonar.api.profiles.ProfileDefinition;
+import org.sonar.api.profiles.RulesProfile;
+import org.sonar.api.profiles.XMLProfileParser;
+import org.sonar.api.utils.ValidationMessages;
 
+public final class PhpCsProfile extends ProfileDefinition {
 
-public class PHPRulesDefinition implements RulesDefinition {
+  private final XMLProfileParser xmlProfileParser;
 
-  private static final String REPOSITORY_NAME = "SonarQube";
-
-  private static final Logger LOG = LoggerFactory.getLogger(PHPRulesDefinition.class);
-
-  @Override
-  public void define(Context context) {
-    NewRepository repository = context.createRepository(CheckList.REPOSITORY_KEY, Php.KEY).setName(REPOSITORY_NAME);
-    AnnotationBasedRulesDefinition.load(repository, Php.KEY, CheckList.getChecks());
-    repository.done();
+  public PhpCsProfile(XMLProfileParser xmlProfileParser) {
+    this.xmlProfileParser = xmlProfileParser;
   }
 
+  @Override
+  public RulesProfile createProfile(ValidationMessages validation) {
+    return xmlProfileParser.parseResource(getClass().getClassLoader(), "org/sonar/plugins/php/profiles/all-phpcs-profile.xml", validation);
+  }
 }

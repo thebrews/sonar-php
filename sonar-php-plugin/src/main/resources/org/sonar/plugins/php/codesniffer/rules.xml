@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rules>
+<rule key="Generic.ControlStructures.InlineControlStructure" priority="BLOCKER">
+<category name="" />
+<name>InlineControlStructure</name>
+<configKey>rulesets/InlineControlStructure</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.Files.LineEndings" priority="BLOCKER">
+<category name="" />
+<name>LineEndings</name>
+<configKey>rulesets/LineEndings</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.Files.LineLength" priority="BLOCKER">
+<category name="" />
+<name>LineLength</name>
+<configKey>rulesets/LineLength</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.Functions.FunctionCallArgumentSpacing" priority="BLOCKER">
+<category name="" />
+<name>FunctionCallArgumentSpacing</name>
+<configKey>rulesets/FunctionCallArgumentSpacing</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.NamingConventions.UpperCaseConstantName" priority="BLOCKER">
+<category name="" />
+<name>UpperCaseConstantName</name>
+<configKey>rulesets/UpperCaseConstantName</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.PHP.DisallowShortOpenTag" priority="BLOCKER">
+<category name="" />
+<name>DisallowShortOpenTag</name>
+<configKey>rulesets/DisallowShortOpenTag</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.PHP.LowerCaseConstant" priority="BLOCKER">
+<category name="" />
+<name>LowerCaseConstant</name>
+<configKey>rulesets/LowerCaseConstant</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="Generic.WhiteSpace.DisallowTabIndent" priority="BLOCKER">
+<category name="" />
+<name>DisallowTabIndent</name>
+<configKey>rulesets/DisallowTabIndent</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Classes.ClassDeclaration" priority="BLOCKER">
+<category name="" />
+<name>ClassDeclaration</name>
+<configKey>rulesets/ClassDeclaration</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Commenting.ClassComment" priority="BLOCKER">
+<category name="" />
+<name>ClassComment</name>
+<configKey>rulesets/ClassComment</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Commenting.FileComment" priority="BLOCKER">
+<category name="" />
+<name>FileComment</name>
+<configKey>rulesets/FileComment</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Commenting.FunctionComment" priority="BLOCKER">
+<category name="" />
+<name>FunctionComment</name>
+<configKey>rulesets/FunctionComment</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Commenting.InlineComment" priority="BLOCKER">
+<category name="" />
+<name>InlineComment</name>
+<configKey>rulesets/InlineComment</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.ControlStructures.ControlSignature" priority="BLOCKER">
+<category name="" />
+<name>ControlSignature</name>
+<configKey>rulesets/ControlSignature</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.ControlStructures.MultiLineCondition" priority="BLOCKER">
+<category name="" />
+<name>MultiLineCondition</name>
+<configKey>rulesets/MultiLineCondition</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Files.IncludingFile" priority="BLOCKER">
+<category name="" />
+<name>IncludingFile</name>
+<configKey>rulesets/IncludingFile</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Formatting.MultiLineAssignment" priority="BLOCKER">
+<category name="" />
+<name>MultiLineAssignment</name>
+<configKey>rulesets/MultiLineAssignment</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Functions.FunctionCallSignature" priority="BLOCKER">
+<category name="" />
+<name>FunctionCallSignature</name>
+<configKey>rulesets/FunctionCallSignature</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Functions.FunctionDeclaration" priority="BLOCKER">
+<category name="" />
+<name>FunctionDeclaration</name>
+<configKey>rulesets/FunctionDeclaration</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.Functions.ValidDefaultValue" priority="BLOCKER">
+<category name="" />
+<name>ValidDefaultValue</name>
+<configKey>rulesets/ValidDefaultValue</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.NamingConventions.ValidClassName" priority="BLOCKER">
+<category name="" />
+<name>ValidClassName</name>
+<configKey>rulesets/ValidClassName</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.NamingConventions.ValidFunctionName" priority="BLOCKER">
+<category name="" />
+<name>ValidFunctionName</name>
+<configKey>rulesets/ValidFunctionName</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.NamingConventions.ValidVariableName" priority="BLOCKER">
+<category name="" />
+<name>ValidVariableName</name>
+<configKey>rulesets/ValidVariableName</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.WhiteSpace.ObjectOperatorIndent" priority="BLOCKER">
+<category name="" />
+<name>ObjectOperatorIndent</name>
+<configKey>rulesets/ObjectOperatorIndent</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.WhiteSpace.ScopeClosingBrace" priority="BLOCKER">
+<category name="" />
+<name>ScopeClosingBrace</name>
+<configKey>rulesets/ScopeClosingBrace</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+<rule key="PEAR.WhiteSpace.ScopeIndent" priority="BLOCKER">
+<category name="" />
+<name>ScopeIndent</name>
+<configKey>rulesets/ScopeIndent</configKey>
+<description>![CDATA[test]]</description>
+</rule>
+</rules>
