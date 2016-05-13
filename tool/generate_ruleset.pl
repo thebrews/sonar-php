@@ -74,6 +74,6 @@ print $fh3 $foot2;
 close $fh2;
 close $fh3;
 
-mkdir qw|../sonar-php-plugin/target/classes/org/sonar/plugins/php/profiles/|;
+mkpath qw|../sonar-php-plugin/target/classes/org/sonar/plugins/php/profiles/|;
 move 'rules.xml', '../sonar-php-plugin/src/main/resources/org/sonar/plugins/php/codesniffer/rules.xml';
 move 'all-phpcs-profile.xml', '../sonar-php-plugin/target/classes/org/sonar/plugins/php/profiles/all-phpcs-profile.xml';
